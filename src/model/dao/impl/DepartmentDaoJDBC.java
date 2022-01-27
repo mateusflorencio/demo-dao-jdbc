@@ -5,13 +5,15 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import db.DB;
 import db.DbException;
 import model.dao.DepartmentDao;
 import model.entities.Department;
-import model.entities.Seller;
 
 public class DepartmentDaoJDBC implements DepartmentDao {
 
@@ -72,8 +74,22 @@ public class DepartmentDaoJDBC implements DepartmentDao {
 
 	@Override
 	public void delete(Integer id) {
-		// TODO Auto-generated method stub
-
+		PreparedStatement statement=null;
+		
+		try {
+			statement=conn.prepareStatement(
+					"DELETE FROM department WHERE Id =? "
+					);
+			statement.setInt(1, id);
+			statement.executeUpdate();
+					
+			
+		} catch (SQLException e) {
+			throw new DbException(e.getMessage());
+		}
+		finally {
+			DB.closeStatement(statement);
+		}
 	}
 
 	@Override
@@ -101,6 +117,7 @@ public class DepartmentDaoJDBC implements DepartmentDao {
 			DB.closeResultSet(rs);
 		}
 	}
+	
 	private Department instantiateDepartment(ResultSet rs) throws SQLException {
 		Department department = new Department();
 		department.setId(rs.getInt("Id"));
@@ -111,8 +128,34 @@ public class DepartmentDaoJDBC implements DepartmentDao {
 
 	@Override
 	public List<Department> findAll() {
-		// TODO Auto-generated method stub
-		return null;
+		List<Department> list=new ArrayList<>();
+		PreparedStatement statement=null;
+		ResultSet resultSet=null;
+		Map<Integer, Department> map = new HashMap<>();
+		
+		try {
+			
+			statement=conn.prepareStatement("SELECT * FROM department ORDER BY Name");
+			resultSet=statement.executeQuery();
+			
+			while (resultSet.next()) {
+				Department department = new Department();
+				department.setId(resultSet.getInt("Id"));
+				department.setName(resultSet.getString("Name"));
+				list.add(department);
+				
+			}
+			return list;
+			
+		} catch (SQLException e) {
+			throw new DbException(e.getMessage());
+		}
+		
+		finally {
+			DB.closeResultSet(resultSet);
+			DB.closeStatement(statement);
+		}
+		
 	}
 
 }
